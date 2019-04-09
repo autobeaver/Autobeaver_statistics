@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 import numpy as np
+import pandas as pd
 from scipy import stats
+from scipy.stats import f_oneway
+from statsmodels.sandbox.stats.runs import mcnemar
 
 
 class ModelSteelyard:
@@ -45,7 +47,7 @@ class ModelSteelyard:
         return interval
     
     @classmethod
-    def delta_interval(cls, control_group, test_group, alpha=0.5):
+    def delta_interval(cls, control_group, test_group, alpha=0.05):
         n2 = len(control_group)
         n1 = len(test_group)
         u2 = cls.mean(control_group)
@@ -77,13 +79,38 @@ class ModelSteelyard:
             p = 0.0
         return p
     
+    @classmethod
+    def mcnemar_test(cls, cases):
+        (statistic, pVal) = mcnemar(cases)
+        return statistic, pVal
+    
+    @classmethod
+    def report(cls, control_group, test_group):
+        control_group_interval = cls.mean_interval(control_group)
+        test_group_interval = cls.mean_interval(test_group)
+        print("The control group's confidence interval is ( %f , %f )" % (control_group_interval[0], control_group_interval[1]))
+        print("The test group's confidence interval is ( %f , %f )" % (test_group_interval[0], test_group_interval[1]))
+        lower_bound, upper_bound = cls.delta_interval(control_group, test_group)
+        print("The delta mean confidence interval is ( %f , %f )" % (lower_bound, upper_bound))
+        p_surpass = cls.surpass_rate(control_group, test_group)
+        print("The probability that the test group model outperforms the control group is a %f " % (p_surpass))
+        anov_answer = f_oneway(control_group, test_group)
+        if anov_answer[1] <= 0.05:
+            print("The results of variance analysis showed that there was significant difference between the two models.")
+        else:
+            print("The results of variance analysis showed that there was no significant difference between the two models.")
+        return
+    
         
 if __name__ == "__main__":       
     x = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2,0.2, 0.2, 0.2, 0.2]
     y = [0.21,0.29,0.242,0.16,0.23,0.19, 0.13, 0.24, 0.17, 0.23, 0.2, 0.13, 0.24, 0.2, 0.2, 0.2]
-    ms = ModelSteelyard()
-    interval = ms.mean_interval(y)
-    lower_bound, upper_bound = ms.delta_interval(x, y)
-    lower_rise, upper_rise = ms.rise_interval(x, y)
-    p = ms.surpass_rate(x, y)
+    interval = ModelSteelyard.mean_interval(y)
+    lower_bound, upper_bound = ModelSteelyard.delta_interval(x, y)
+    lower_rise, upper_rise = ModelSteelyard.rise_interval(x, y)
+    p_surpass = ModelSteelyard.surpass_rate(x, y)
+    anov_answer = f_oneway(x, y)
+    cases = np.array([[20, 21],[43, 16]])
+    mcnemar_answer = ModelSteelyard.mcnemar_test(cases)
+    ModelSteelyard.report(x, y)
     

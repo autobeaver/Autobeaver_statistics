@@ -31,3 +31,16 @@ control_group: array_like.
 test_group: array_like.  
 **returns**  
 float value: Probability of better control group
+
+5. mcnemar_test(cases)        
+**parameters**          
+cases: A numpy array contains the input data       
+**returns**       
+The mcnemar test's F statistic and pvalue     
+
+6. report(control_group, test_group)      
+**parameters**        
+control_group: array_like.        
+test_group: array_like.        
+**returns**        
+A summry of the statistical analysis of results
